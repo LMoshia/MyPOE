@@ -58,7 +58,6 @@ public class LoginTest {
         login.password = "Pass123!";
         login.FirstName = "Kyle";
         login.LastName = "Smith";
-
         String result = login.returnLoginStatus("kyl_1", "Pass123!", "Kyle", "Smith");
         assertEquals("Welcome Kyle, Smith it is great to see you again.", result);
     }
@@ -74,5 +73,32 @@ public class LoginTest {
         String result = login.returnLoginStatus("wrongUser", "wrongPassword", "Kyle", "Smith");
         assertEquals("Username or password incorrect, please try again.", result);
     }
+    @Test
+    public void testRegisterUesrSuccess() {
+        Login login = new Login();
+        String result = login.registerUesr("Kyle", "Smith", "kyl_1", "Pass123!", "+27838968976");
+        assertTrue(result.contains("User registered successfully."));
+    }
+
+    @Test
+    public void testRegisterUserInvalidUesrname() {
+        Login login = new Login();
+        String result = login.registerUesr("Kyle", "Smith", "kyle!!!!!!", "Pass123!", "+27838968976");
+        assertTrue(result.contains("Username is not correctly formatted"));
+    }
+    @Test
+    public void testLoginUserSuccessful() {
+        Login login = new Login();
+        login.registerUesr("Kyle", "Smith", "kyl_1", "Pass123!", "+27838968976");
+        assertTrue(login.loginUesr("kyl_1", "Pass123!"));
+    }
+
+    @Test
+    public void testLoginUesrFailed() {
+        Login login = new Login();
+        login.registerUesr("Kyle", "Smith", "kyl_1", "Pass123!", "+27838968976");
+        assertFalse(login.loginUesr("kyl_1", "wrongPassword"));
+    }
+
     
 }
