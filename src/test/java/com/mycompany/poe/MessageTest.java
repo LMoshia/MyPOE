@@ -4,10 +4,6 @@
  */
 package com.mycompany.poe;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,142 +13,135 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class MessageTest {
     
-    public MessageTest() {
-    
-}  
-     @Test
-    public void messageLengthSuccess(String message1) {
-          Message message;
-        message = new Message(0, "+27718693002", message1);
-        assertEquals("Message ready to send.", message.checkMessageLength());
-    }
+    // ===== RECIPIENT TESTS =====
     @Test
-    public void messageLengthFailure() {
-        String longText = "a".repeat(260);
-        Message message;
-               message  = new Message(0, "+27718693002", longText);
-        assertEquals("Message exceeds 250 characters by 10; please reduce the size.", message.checkMessageLength());
+    public void testCheckRecipientCell_Success() {
+        Message m = new Message(0, "+27789898989", "Hi there");
+        String result = m.checkRecipientCell();
+        assertEquals("Cell phone number successfully captured.", result);
     }
+
     @Test
-    public void recipientSuccess(String message1) {
-        Message message;
-                message = new Message(0, "+27718693002", message1);
-        assertEquals("Cell phone number successfully captured.", message.checkRecipientCell());
+    public void testCheckRecipientCell_Fail_NoPlus() {
+        Message m = new Message(0, "2789898989", "Hi there");
+        String result = m.checkRecipientCell();
+        assertTrue(result.contains("incorrectly formatted"));
     }
+
     @Test
-    public void recipientFailure(String message2) {
-        Message message;
-        message = new Message(1, "08575975889", message2);
-        assertEquals("Cell phone number is incorrectly formatted or does not contain an international code. Please correct the number and try again.",
-                message.checkRecipientCell());
+    public void testCheckRecipientCell_Fail_TooLong() {
+        Message m = new Message(0, "+2778989898912345", "Hi there");
+        String result = m.checkRecipientCell();
+        assertTrue(result.contains("incorrectly formatted"));
     }
+
+    // ===== MESSAGE LENGTH TESTS =====
     @Test
-    public void messageIdIsTenCharacters(String message1) {
-        Message message;
-         message = new Message(0, "+27718693002", message1);
-        assertEquals(10, message.messageId.length());
-        assertTrue(message.checkMessageID());
+    public void testCheckMessageLength_Success() {
+        Message m = new Message(0, "+27789898989", "Hello world");
+        assertEquals("Message ready to send.", m.checkMessageLength());
     }
+
     @Test
-    public void messageHashFormat(String message1) {
-            Message message;
-        message = new Message(0, "+27718693002", message1);
-        String start = message.messageId.substring(0, 2) + ":0:";
-        assertTrue(message.messageHash.startsWith(start));
-        assertTrue(message.messageHash.endsWith("HITONIGHT"));
+    public void testCheckMessageLength_Fail_Over250() {
+        // create 251 character message
+        String longMsg = "a".repeat(251);
+        Message m = new Message(0, "+27789898989", longMsg);
+        String result = m.checkMessageLength();
+        assertTrue(result.contains("exceeds 250"));
+        assertTrue(result.contains("by 1"));
     }
-     @Test
-    public void sendMessageAddsToTotal(String message1) {
-        Message message;
-       message = new Message(0, "+27718693002", message1);
-        assertEquals("Message successfully sent", message.sentMessage(1));
-        assertEquals(1, message.returnTotalMessages());
+
+    @Test
+    public void testCheckMessageLength_Exactly250() {
+        String exactMsg = "a".repeat(250);
+        Message m = new Message(0, "+27789898989", exactMsg);
+        assertEquals("Message ready to send.", m.checkMessageLength());
     }
-@Test
-    public void discardMessageDoesNotAddToTotal() {
-        Message message;
-        Message message1 = new message(0, "+27718693002", message1);
-        Message message2 = new Message(1, "08575975889", message2);
-        message1.sentMessage(1);
-        assertEquals("Press 0 to delete the message", message2.sentMessage(2));
+
+    // ===== MESSAGE ID TESTS =====
+    @Test
+    public void testCreateMessageID_Length() {
+        Message m = new Message(1, "+27789898989", "Test");
+        assertEquals(10, m.messageId.length());
+        assertTrue(m.checkMessageID());
+    }
+
+    @Test
+    public void testCreateMessageID_IsNumeric() {
+        Message m = new Message(1, "+27789898989", "Test");
+        // ID should only contain digits
+        assertTrue(m.messageId.matches("\\d{10}"));
+    }
+
+    // ===== MESSAGE HASH TESTS =====
+    @Test
+    public void testCreateMessageHash_Format() {
+        Message m = new Message(0, "+27789898989", "Hi Mike how are you");
+        String hash = m.createMessageHash();
+        // Format should be 00:0:HIMIKE or 00:0:HIYOU - uppercase, contains : :
+        System.out.println("Generated Hash: " + hash);
+        assertTrue(hash.contains(":"));
+        assertTrue(hash.equals(hash.toUpperCase())); // must be uppercase
+    }
+
+    @Test
+    public void testCreateMessageHash_FirstAndLastWord() {
+        Message m = new Message(1, "+27789898989", "Hello world again");
+        String hash = m.createMessageHash();
+        // Should contain HELLO and AGAIN
+        assertTrue(hash.contains("HELLO"));
+        assertTrue(hash.contains("AGAIN"));
+    }
+
+    // ===== SENT MESSAGE TESTS =====
+    @Test
+    public void testSentMessage_Send() {
+        Message.totalSent = 0; // reset
+        Message.sentMessages = "";
+        Message m = new Message(0, "+27789898989", "Test send");
+        String result = m.sentMessage(1);
+        assertEquals("Message successfully sent.", result);
         assertEquals(1, Message.returnTotalMessages());
     }
-       @Test
-    public void storeMessageText(String message1) {
-        Message message;
-        message = new Message(0, "+27718693002", message1);
-        assertEquals("Message successfully stored", message.sentMessage(3));
-    }
-      @Test
-    public void printMessagesContainsSentMessage(String message1) {
-        Message message;
-        message = new Message(0, "+27718693002", message1);
-        message.sentMessage(1);
-        assertTrue(Message.printMessages().contains(message1));
+
+    @Test
+    public void testSentMessage_Disregard() {
+        Message m = new Message(0, "+27789898989", "Test disregard");
+        String result = m.sentMessage(2);
+        assertEquals("Press 0 to delete the message.", result);
     }
 
     @Test
-    public void storedMessageIsWrittenToJsonFile(String message1) throws IOException {
-        Message message = new Message(0, "+27718693002", message1);
-        message.sentMessage(3);
-        String file = Files.readString(Paths.get("messages.json"));
-        assertTrue(file.contains("\"messageHash\":\"" + message.messageHash + "\""));
-        assertTrue(file.contains("\"recipient\":\"+27718693002\""));
+    public void testSentMessage_Store() {
+        Message m = new Message(0, "+27789898989", "Test store");
+        String result = m.sentMessage(3);
+        assertEquals("Message successfully stored.", result);
     }
 
-    private static class Message {
+    @Test
+    public void testReturnTotalMessages() {
+        Message.totalSent = 0;
+        Message.sentMessages = "";
+        Message m1 = new Message(0, "+27789898989", "One");
+        Message m2 = new Message(1, "+27789898989", "Two");
+        messa1.sentMessage(1);
+        m2.sentMessage(1);
+        assertEquals(2, Message.returnTotalMessages());
+    }
 
-        private static Object printMessages() {
-            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-        }
-
-        private static short returnTotalMessages() {
-            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-        }
-
-        private String messageHash;
-        
-        private String printMessage;
-        public Message(int par, String string, String longText) {
-        }
-
-        private Message(int i, String string, Message message2) {
-            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-        }
-
-        private void sentMessage(int i) {
-            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-        }
-
-        private Object checkMessageLength() {
-            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-        }
-
-        private Object checkRecipientCell() {
-            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-        }
-
-        private boolean checkMessageID() {
-            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-        }
-
-        private class messageId {
-
-            private static short length() {
-                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-            }
-
-            private static String substring(int i, int i0) {
-                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-            }
-
-            public messageId() {
-            }
-        }
+    @Test
+    public void testGetDetails_ContainsAll() {
+        Message m = new Message(0, "+27789898989", "Hello there");
+        String details = m.getDetails();
+        assertTrue(details.contains("Message ID:"));
+        assertTrue(details.contains("Message Hash:"));
+        assertTrue(details.contains("Recipient:"));
+        assertTrue(details.contains("Message:"));
+        assertTrue(details.contains("+27789898989"));
     }
 }
-
-
+   
    
 
 
