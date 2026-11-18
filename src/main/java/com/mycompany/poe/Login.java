@@ -12,14 +12,15 @@ public class Login {
      public String LastName;
      public String userName;
      public String password;
-     public int CellPhoneNumber;
+     public String CellPhoneNumber;
      
      private boolean isRegistered = false;
-     
-    public boolean checkUesrName(String UesrName){
-         return UesrName.contains("_") && userName.length() <=5;
-        
-     }
+   public boolean checkUesrName(String UserName) {
+
+    return UserName != null
+            && UserName.contains("_")
+            && UserName.length() <= 5;
+}
       public boolean checkPasswordComplexity(String password){
         if(password.length ()< 8) return false;
         boolean hasCapital = false;
@@ -44,53 +45,40 @@ public class Login {
         if (!cellPhoneNumber.startsWith("+27")) {
         return false;
     }
-
     if (cellPhoneNumber.length() != 12) { // +27 plus 9 digits
         return false;
     }
-
     for (int i = 3; i < cellPhoneNumber.length(); i++) {
         if (!Character.isDigit(cellPhoneNumber.charAt(i))) {
             return false;
         }
-    
     }
     return true;
     }
     public String registerUesr(String firstName, String lastName, String userName,
                                 String password, String cellPhoneNumber) {
-
+        
         StringBuilder message = new StringBuilder();
         boolean usernameOk = checkUesrName(userName);
         boolean passwordOk = checkPasswordComplexity(password);
         boolean phoneOk = checkPhoneNumber(cellPhoneNumber);
-
         if (usernameOk) {
             message.append("Username successfully captured.\n");
         } else {
             message.append("Username is not correctly formatted; please ensure that your username "
                     + "contains an underscore and is no more than five characters in length.\n");
         }
-
-        if (passwordOk) {
-            message.append("Password successfully captured.\n");
-        } else {
-            message.append("Password is not correctly formatted; please ensure that the password "
-                    + "contains at least eight characters, a capital letter, a number, and a special character.\n");
-        }
-
-        if (passwordOk) {
-            message.append("Password successfully captured.\n");
-        } else {
-            message.append("Password is not correctly formatted; please ensure that the password "
-                    + "contains at least eight characters, a capital letter, a number, and a special character.\n");
-        }
-
         if (phoneOk) {
-            message.append("Cell phone number successfully added.\n");
+            message.append("cell phone number successfully captured.\n");
         } else {
-            message.append("Cell phone number incorrectly formatted or does not contain international code; "
-                    + "please correct the number and try again.\n");
+            message.append("Cell phone number incorrectly formmated or does not"
+                    + "contain international code.\n");
+        }
+        if (passwordOk) {
+            message.append("Password successfully captured.\n");
+        } else {
+            message.append("Password is not correctly formatted; please ensure that the password "
+                    + "contains at least eight characters, a capital letter, a number, and a special character.\n");
         }
          if (usernameOk && passwordOk && phoneOk) {
             this.FirstName = firstName;
@@ -101,9 +89,9 @@ public class Login {
             this.isRegistered = true;
             message.append("User registered successfully.");
         }
-
         return message.toString();
     }
+    
     public boolean loginUesr(String userName, String password) {
         if (!isRegistered) return false;
         return this.userName.equals(userName) && this.password.equals(password);
@@ -127,12 +115,10 @@ public class Login {
      public String getPassword(){
          return password;
      }
-     public int getCellPhoneNumber(){
+     public String getCellPhoneNumber(){
          return CellPhoneNumber;
 
      }
-
-    String RegisterUser(String kyle, String smith, String kyl_1, String pass123, String string) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
 }
+
+    
